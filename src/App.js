@@ -12,76 +12,102 @@ import { Route, Routes, useNavigate } from 'react-router-dom';
 //import PostLayout from './PostLayout';
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
-
+import api from './api/posts'
+import EditPost from './EditPost';
+import useWindowSize from './hooks/useWindowSize';
 
 function App() {
-  const [posts,setPosts] = useState([
-    {
-      id: 1,
-      title: "My first post",
-      datetime: "Fri 29 Dec 23:58:31 GMT 2023",
-      body: "Bishwath turns 7 today"
-    },
-    {
-      id: 2,
-      title: "My second post",
-      datetime: "Thu 28 Dec 13:18:03 GMT 2023",
-      body: "Learning React Routers"
-    },
-    {
-      id: 3,
-      title: "My third post",
-      datetime: "Sat 30 Dec 01:08:01 GMT 2023",
-      body: "Building my first react app"
-    },
-    {
-      id: 4,
-      title: "My fourth post",
-      datetime: "Wed 27 Dec 16:58:31 GMT 2023",
-      body: "Enrich knowledge and get a job"
-    }
-  ])
-
+  const [posts,setPosts] = useState([])
   const [search,setSearch] = useState('')
-  const [searchResults,setSearchResults] = useState([])
+  //const [searchResults,setSearchResults] = useState([])
   const [postTitle,setPostTitle] = useState('')
   const [postBody,setPostBody] = useState('')
+  const [editTitle,setEditTitle] = useState('')
+  const [editBody,setEditBody] = useState('')
+
+  const {width} = useWindowSize()
 
   const navigate = useNavigate() //Hook
 
   useEffect( () => {
-    const filteredResults = posts.filter((post) => ((post.title).toLowerCase()).includes(search.toLowerCase()) 
-                                                || ((post.body).toLowerCase()).includes(search.toLowerCase())
-                                        )    
-    setSearchResults(filteredResults.reverse())
-  },[posts,search]) 
+    const fetchPosts = async () => {
+      try{
+        const response = await api.get('/posts')
+        setPosts(response.data)
+      }
+      catch(err){
+        if(err.response){
+          console.log(err.response.status)
+          console.log(err.response.data)
+          console.log(err.response.headers)
+        }
+        else{
+          console.log(`Error: ${err.message}`)
+        }
+      }
+    }
+    fetchPosts();
+  },[]) 
 
-    
-  const handleSubmit = (e)=> {
+ // const filteredResults = posts.filter((post) => ((post.title).toLowerCase()).includes(search.toLowerCase()) 
+                                             // || ((post.body).toLowerCase()).includes(search.toLowerCase())
+   //                                   )    
+ // setSearchResults(filteredResults.reverse())
+
+  const handleSubmit = async (e)=> {
     e.preventDefault()
     const id = posts.length 
               ? posts[posts.length-1].id + 1
               : 1
     const datetime = format(new Date(), 'MMMM dd, yyyy pp')
     const newPost = {id,title : postTitle,datetime,body : postBody}
-    const allPosts = [...posts,newPost]
-    setPosts(allPosts)
-    setPostTitle('')
-    setPostBody('')
-    navigate('/')
+    try{
+      const response = await api.post('/posts',newPost)
+      const allPosts = [...posts,response.data]
+      setPosts(allPosts)
+      setPostTitle('')
+      setPostBody('')
+      navigate('/')
+    }
+    catch(err){
+      console.log(`Error: ${err.message}`)
+    }
   }
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
+    try{
+      await api.delete(`/posts/${id}`)
+      const filteredPost = posts.filter(post => post.id !== id)
+      setPosts(filteredPost)
+      navigate('/')
+    }
+    catch(err){
+      console.log(`Error: ${err.message}`)
+    }
+  }
+
+  const handleEdit = async (id) => {
     
-   const filteredPost = posts.filter(post => post.id !== id)
-   setPosts(filteredPost)
-   navigate('/')
+    const datetime = format(new Date(), 'MMMM dd, yyyy pp')
+    const updatedPost = {id, title : editTitle, datetime, body : editBody}
+    try{
+      const response = await api.put(`/posts/${id}`,updatedPost)
+      setPosts(posts.map(post => post.id === id ? {...response.data} : post))
+      setEditTitle('')
+      setEditBody('')
+      navigate('/')
+    }
+    catch(err){
+    
+    } 
+
   }
 
   return (
     <div className="App">
       <Header 
         title = 'Social Media App'
+        width = {width}
       />
       <Nav 
         search = {search}
@@ -89,8 +115,10 @@ function App() {
       />
       <Routes>
         <Route path='/' element = {
-          <Home 
-            posts = {searchResults}
+          <Home  // posts = {searchResults}
+             posts = {posts.filter((post) => ((post.title).toLowerCase()).includes(search.toLowerCase()) 
+                                        || ((post.body).toLowerCase()).includes(search.toLowerCase())
+                                  ).reverse()}
           />}
         />  
         <Route  path='post'>
@@ -110,6 +138,16 @@ function App() {
             />}
           />
         </Route>
+        <Route path='/edit/:id' element={
+            <EditPost 
+              posts ={posts}
+              handleEdit={handleEdit}
+              editTitle={editTitle}
+              editBody={editBody}
+              setEditTitle={setEditTitle}
+              setEditBody={setEditBody}
+            />}
+        /> 
         <Route path='about' element = {<About />} />
         <Route path='*' element ={<Missing/>} />
       </Routes>

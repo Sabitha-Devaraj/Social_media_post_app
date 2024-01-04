@@ -220,13 +220,17 @@ body {
   cursor: pointer;
 }
 
-.deleteButton {
+.deleteButton, .cancelButton {
   background-color: red;
 }
 
-.editButton {
+.editButton, .saveButton  {
   background-color: #333;
 }
+.saveButton {
+  max-width : 150px;
+}
+
 
 .statusMsg {
   margin-top: 2rem;

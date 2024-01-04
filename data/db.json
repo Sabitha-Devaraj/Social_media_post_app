@@ -1,0 +1,22 @@
+{
+  "posts": [
+    {
+      "id": 1,
+      "title": "My first post",
+      "datetime": "Fri 29 Dec 23:58:31 GMT 2023",
+      "body": "Bishwath turns 7 today"
+    },
+    {
+      "id": 2,
+      "title": "My second post",
+      "datetime": "Thu 28 Dec 13:18:03 GMT 2023",
+      "body": "Learning React Routers"
+    },
+    {
+      "id": 3,
+      "title": "Enrich knowledge",
+      "datetime": "January 03, 2024 1:28:17 AM",
+      "body": "get job by end of 2024"
+    }
+  ]
+}
