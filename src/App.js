@@ -14,22 +14,23 @@ import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import api from './api/posts'
 import EditPost from './EditPost';
-import useWindowSize from './hooks/useWindowSize';
+import useWindowSize from './hooks/useWindowSize'; 
+import useAxiosFetch from './hooks/useAxiosFetch';
 
 function App() {
+
   const [posts,setPosts] = useState([])
   const [search,setSearch] = useState('')
-  //const [searchResults,setSearchResults] = useState([])
+  const [searchResults,setSearchResults] = useState([])
   const [postTitle,setPostTitle] = useState('')
   const [postBody,setPostBody] = useState('')
   const [editTitle,setEditTitle] = useState('')
   const [editBody,setEditBody] = useState('')
 
   const {width} = useWindowSize()
-
   const navigate = useNavigate() //Hook
 
-  useEffect( () => {
+ {/*useEffect( () => {
     const fetchPosts = async () => {
       try{
         const response = await api.get('/posts')
@@ -49,10 +50,21 @@ function App() {
     fetchPosts();
   },[]) 
 
- // const filteredResults = posts.filter((post) => ((post.title).toLowerCase()).includes(search.toLowerCase()) 
-                                             // || ((post.body).toLowerCase()).includes(search.toLowerCase())
-   //                                   )    
- // setSearchResults(filteredResults.reverse())
+*/}
+const {data, fetchError, isLoading} = useAxiosFetch("http://localhost:3500/posts/")
+
+useEffect(() => {
+  setPosts(data)
+},[data])
+
+
+
+useEffect(() => {
+  const filteredResults = posts.filter((post) => ((post.title).toLowerCase()).includes(search.toLowerCase()) 
+                                              || ((post.body).toLowerCase()).includes(search.toLowerCase())
+                                      )    
+  setSearchResults(filteredResults.reverse())
+},[posts,search])
 
   const handleSubmit = async (e)=> {
     e.preventDefault()
@@ -115,10 +127,9 @@ function App() {
       />
       <Routes>
         <Route path='/' element = {
-          <Home  // posts = {searchResults}
-             posts = {posts.filter((post) => ((post.title).toLowerCase()).includes(search.toLowerCase()) 
-                                        || ((post.body).toLowerCase()).includes(search.toLowerCase())
-                                  ).reverse()}
+          <Home posts = {searchResults}
+                fetchError = {fetchError}
+                isLoading = {isLoading}
           />}
         />  
         <Route  path='post'>
